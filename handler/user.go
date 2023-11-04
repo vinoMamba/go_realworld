@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vinoMamba.com/go_realworld/logger"
 	"github.com/vinoMamba.com/go_realworld/params/request"
+	"github.com/vinoMamba.com/go_realworld/params/response"
 	"github.com/vinoMamba.com/go_realworld/utils"
 )
 
@@ -25,7 +25,23 @@ func userLogin(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	fmt.Println(utils.JsonMarshal(body))
+
+	token, err := utils.GenerateJWT(body.User.Email, "vino")
+	if err != nil {
+		log.WithError(err).Errorln("Generate JWT Error")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusOK, response.UserAuthenticationResponse{
+		User: response.UserAuthenticationBody{
+			Email:    body.User.Email,
+			Username: "vino",
+			Bio:      "",
+			Image:    "",
+			Token:    token,
+		},
+	})
 }
 
 func userRegistration(c *gin.Context) {
@@ -37,5 +53,22 @@ func userRegistration(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	fmt.Println(utils.JsonMarshal(body))
+
+	token, err := utils.GenerateJWT(body.User.Email, body.User.Username)
+	if err != nil {
+		log.WithError(err).Errorln("Generate JWT Error")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	c.JSON(http.StatusOK, response.UserAuthenticationResponse{
+		User: response.UserAuthenticationBody{
+			Email:    body.User.Email,
+			Username: body.User.Username,
+			Bio:      "",
+			Image:    "",
+			Token:    token,
+		},
+	})
+
 }
